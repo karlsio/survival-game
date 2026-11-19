@@ -76,7 +76,7 @@ function resetGame() {
   resources.length = 0;
   createResources();
   createEnemies();
-  setMessage("收集資源、擊敗敵人。按空白鍵攻擊；經驗可讓角色進化！");
+  setMessage("收集資源、進入敵人範圍即可自動攻擊；經驗可讓角色進化！");
   updateInterface();
 }
 
@@ -165,13 +165,14 @@ function attack() {
       }
     }
   }
-
-  if (hitCount === 0) setMessage("攻擊範圍內沒有敵人。");
+  if (hitCount === 0) attackReady = true;
   updateInterface();
 
-  window.setTimeout(() => {
-    attackReady = true;
-  }, 280);
+  if (hitCount > 0) {
+    window.setTimeout(() => {
+      attackReady = true;
+    }, 280);
+  }
 }
 
 function moveEnemies() {
@@ -253,6 +254,7 @@ function update(timestamp) {
     movePlayer();
     collectResources();
     moveEnemies();
+    attack();
     respawnWorld(timestamp);
   }
   drawWorld();
@@ -291,11 +293,10 @@ document.getElementById("restart").addEventListener("click", resetGame);
 
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
-  if (["arrowleft", "arrowright", "arrowup", "arrowdown", "w", "a", "s", "d", " "].includes(key)) {
+  if (["arrowleft", "arrowright", "arrowup", "arrowdown", "w", "a", "s", "d"].includes(key)) {
     event.preventDefault();
   }
   keys.add(key);
-  if (key === " ") attack();
 });
 
 window.addEventListener("keyup", (event) => {
