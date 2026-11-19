@@ -16,6 +16,10 @@ const keys = new Set();
 const resources = [];
 const enemies = [];
 const evolutionNames = ["新生者", "探險者", "荒野獵人", "守護者"];
+const worldWidth = 2400;
+const worldHeight = 1500;
+let cameraX = 0;
+let cameraY = 0;
 
 let player;
 let attackReady = true;
@@ -33,8 +37,8 @@ let manuallyPaused = false;
 
 function randomPosition(padding = 30) {
   return {
-    x: padding + Math.random() * (canvas.width - padding * 2),
-    y: padding + Math.random() * (canvas.height - padding * 2),
+    x: padding + Math.random() * (worldWidth - padding * 2),
+    y: padding + Math.random() * (worldHeight - padding * 2),
   };
 }
 
@@ -85,8 +89,8 @@ function startNextRound() {
 
 function resetGame() {
   player = {
-    x: canvas.width / 2,
-    y: canvas.height / 2,
+    x: worldWidth / 2,
+    y: worldHeight / 2,
     size: 15,
     speed: 3,
     health: 100,
@@ -122,6 +126,7 @@ function resetGame() {
   enemies.length = 0;
   createResources();
   createEnemies(enemyCountForRound());
+  updateCamera();
   setMessage("收集資源、進入敵人範圍即可自動攻擊；經驗可讓角色進化！");
   updateInterface();
 }
@@ -278,8 +283,13 @@ function movePlayer() {
     player.moving = true;
   }
 
-  player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
-  player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+  player.x = Math.max(player.size, Math.min(worldWidth - player.size, player.x));
+  player.y = Math.max(player.size, Math.min(worldHeight - player.size, player.y));
+}
+
+function updateCamera() {
+  cameraX = Math.max(0, Math.min(worldWidth - canvas.width, player.x - canvas.width / 2));
+  cameraY = Math.max(0, Math.min(worldHeight - canvas.height, player.y - canvas.height / 2));
 }
 
 function collectResources() {
@@ -578,8 +588,11 @@ function drawDigitalMonster() {
 }
 
 function drawWorld() {
+  context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = "#4d6d50";
   context.fillRect(0, 0, canvas.width, canvas.height);
+  context.save();
+  context.translate(-cameraX, -cameraY);
 
   context.strokeStyle = "rgba(232, 212, 154, 0.25)";
   context.beginPath();
@@ -599,6 +612,7 @@ function drawWorld() {
   }
 
   drawDigitalMonster();
+  context.restore();
 }
 
 function update(timestamp) {
@@ -606,6 +620,7 @@ function update(timestamp) {
     if (player.health > 0 && !routeSelectionOpen && !skillSelectionOpen) {
       elapsedMilliseconds += timestamp - lastTimerTimestamp;
       movePlayer();
+      updateCamera();
       collectResources();
       moveEnemies();
       attack();
