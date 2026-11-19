@@ -9,6 +9,7 @@ const xpElement = document.getElementById("xp");
 const xpNeededElement = document.getElementById("xp-needed");
 const killsElement = document.getElementById("kills");
 const roundElement = document.getElementById("round");
+const timerElement = document.getElementById("timer");
 const messageElement = document.getElementById("message");
 
 const keys = new Set();
@@ -26,6 +27,9 @@ let skillSelectionOpen = false;
 let pendingEvolutionRoute = false;
 let roundNumber = 1;
 let roundTransition = false;
+let elapsedMilliseconds = 0;
+let lastTimerTimestamp = 0;
+let timerRunning = false;
 
 function randomPosition(padding = 30) {
   return {
@@ -109,6 +113,9 @@ function resetGame() {
   pendingEvolutionRoute = false;
   roundNumber = 1;
   roundTransition = false;
+  elapsedMilliseconds = 0;
+  lastTimerTimestamp = performance.now();
+  timerRunning = true;
   resources.length = 0;
   enemies.length = 0;
   createResources();
@@ -130,6 +137,14 @@ function updateInterface() {
   xpNeededElement.textContent = xpNeeded(player.level);
   killsElement.textContent = player.kills;
   roundElement.textContent = roundNumber;
+  timerElement.textContent = formatTime(elapsedMilliseconds);
+}
+
+function formatTime(milliseconds) {
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 function gainXp(amount) {
@@ -333,6 +348,7 @@ function moveEnemies() {
 
       if (player.health <= 0) {
         player.health = 0;
+        timerRunning = false;
         setMessage("你已倒下。按重新開始再試一次！");
       }
     }
@@ -585,14 +601,24 @@ function drawWorld() {
 }
 
 function update(timestamp) {
-  if (player.health > 0 && !routeSelectionOpen && !skillSelectionOpen) {
-    movePlayer();
-    collectResources();
-    moveEnemies();
-    attack();
-    respawnWorld(timestamp);
+  if (timerRunning) {
+    if (player.health > 0 && !routeSelectionOpen && !skillSelectionOpen) {
+      elapsedMilliseconds += timestamp - lastTimerTimestamp;
+      movePlayer();
+      collectResources();
+      moveEnemies();
+      attack();
+      respawnWorld(timestamp);
+      timerElement.textContent = formatTime(elapsedMilliseconds);
+    }
   }
-  drawWorld();
+  lastTimerTimestamp = timestamp;
+
+  if (routeSelectionOpen || skillSelectionOpen) {
+    drawWorld();
+  } else if (player.health > 0) {
+    drawWorld();
+  }
   requestAnimationFrame(update);
 }
 
