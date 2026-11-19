@@ -70,6 +70,7 @@ function resetGame() {
     kills: 0,
     damage: 35,
     attackRange: 55,
+    facing: 1,
   };
   hasAxe = false;
   attackReady = true;
@@ -118,8 +119,14 @@ function evolve() {
 }
 
 function movePlayer() {
-  if (keys.has("arrowleft") || keys.has("a")) player.x -= player.speed;
-  if (keys.has("arrowright") || keys.has("d")) player.x += player.speed;
+  if (keys.has("arrowleft") || keys.has("a")) {
+    player.x -= player.speed;
+    player.facing = -1;
+  }
+  if (keys.has("arrowright") || keys.has("d")) {
+    player.x += player.speed;
+    player.facing = 1;
+  }
   if (keys.has("arrowup") || keys.has("w")) player.y -= player.speed;
   if (keys.has("arrowdown") || keys.has("s")) player.y += player.speed;
 
@@ -219,6 +226,87 @@ function drawHealthBar(enemy) {
   );
 }
 
+function drawDigitalMonster() {
+  const scale = 1 + Math.min(player.level - 1, 4) * 0.08;
+  context.save();
+  context.translate(player.x, player.y);
+  context.scale(player.facing * scale, scale);
+
+  context.fillStyle = "#f58235";
+  context.strokeStyle = "#7c3421";
+  context.lineWidth = 2;
+
+  context.beginPath();
+  context.ellipse(0, 3, 17, 21, 0, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  context.beginPath();
+  context.moveTo(-9, -11);
+  context.lineTo(-15, -26);
+  context.lineTo(-4, -16);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.beginPath();
+  context.moveTo(8, -12);
+  context.lineTo(14, -27);
+  context.lineTo(16, -12);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#f3b55a";
+  context.beginPath();
+  context.ellipse(1, 11, 10, 12, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#f58235";
+  context.beginPath();
+  context.moveTo(10, 13);
+  context.quadraticCurveTo(30, 21, 20, 31);
+  context.quadraticCurveTo(31, 23, 19, 7);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#ffffff";
+  context.beginPath();
+  context.arc(7, -8, 3.5, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = "#1c2630";
+  context.beginPath();
+  context.arc(8.5, -8, 1.6, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#e9dfcf";
+  context.beginPath();
+  context.moveTo(5, -2);
+  context.lineTo(11, -2);
+  context.lineTo(8, 2);
+  context.closePath();
+  context.fill();
+
+  context.fillStyle = "#f58235";
+  context.beginPath();
+  context.moveTo(-10, 18);
+  context.lineTo(-18, 27);
+  context.lineTo(-7, 24);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.beginPath();
+  context.moveTo(9, 18);
+  context.lineTo(18, 27);
+  context.lineTo(7, 24);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.restore();
+}
+
 function drawWorld() {
   context.fillStyle = "#4d6d50";
   context.fillRect(0, 0, canvas.width, canvas.height);
@@ -243,10 +331,7 @@ function drawWorld() {
     drawHealthBar(enemy);
   }
 
-  context.fillStyle = player.level >= 3 ? "#62a8ff" : "#e8d49a";
-  context.beginPath();
-  context.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-  context.fill();
+  drawDigitalMonster();
 }
 
 function update(timestamp) {
