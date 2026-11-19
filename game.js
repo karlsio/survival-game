@@ -97,6 +97,9 @@ function resetGame() {
     facing: 1,
     attackCooldown: 280,
     xpBonus: 1,
+    moving: false,
+    attackingUntil: 0,
+    damagedUntil: 0,
   };
   hasAxe = false;
   attackReady = true;
@@ -238,16 +241,25 @@ function applySkill(skillId) {
 }
 
 function movePlayer() {
+  player.moving = false;
   if (keys.has("arrowleft") || keys.has("a")) {
     player.x -= player.speed;
     player.facing = -1;
+    player.moving = true;
   }
   if (keys.has("arrowright") || keys.has("d")) {
     player.x += player.speed;
     player.facing = 1;
+    player.moving = true;
   }
-  if (keys.has("arrowup") || keys.has("w")) player.y -= player.speed;
-  if (keys.has("arrowdown") || keys.has("s")) player.y += player.speed;
+  if (keys.has("arrowup") || keys.has("w")) {
+    player.y -= player.speed;
+    player.moving = true;
+  }
+  if (keys.has("arrowdown") || keys.has("s")) {
+    player.y += player.speed;
+    player.moving = true;
+  }
 
   player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
   player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
@@ -273,6 +285,7 @@ function collectResources() {
 function attack() {
   if (!attackReady || player.health <= 0) return;
   attackReady = false;
+  player.attackingUntil = performance.now() + 180;
 
   let hitCount = 0;
   for (let i = enemies.length - 1; i >= 0; i -= 1) {
@@ -315,6 +328,7 @@ function moveEnemies() {
 
     if (distance < player.size + enemy.size) {
       player.health -= 0.25;
+      player.damagedUntil = performance.now() + 120;
       updateInterface();
 
       if (player.health <= 0) {
@@ -440,6 +454,10 @@ function drawEnemy(enemy) {
 
 function drawDigitalMonster() {
   const scale = 1 + Math.min(player.level - 1, 4) * 0.08;
+  const now = performance.now();
+  const walking = player.moving ? Math.sin(now / 85) : 0;
+  const attacking = now < player.attackingUntil;
+  const damaged = now < player.damagedUntil;
   let bodyColor = "#f58235";
   let outlineColor = "#7c3421";
   let accentColor = "#f3b55a";
@@ -461,6 +479,11 @@ function drawDigitalMonster() {
   context.save();
   context.translate(player.x, player.y);
   context.scale(player.facing * scale, scale);
+  context.translate(0, player.moving ? walking * 2 : Math.sin(now / 500) * 1);
+
+  if (damaged) {
+    context.globalAlpha = Math.floor(now / 60) % 2 === 0 ? 0.35 : 1;
+  }
 
   context.fillStyle = bodyColor;
   context.strokeStyle = outlineColor;
@@ -521,16 +544,16 @@ function drawDigitalMonster() {
   context.fillStyle = bodyColor;
   context.beginPath();
   context.moveTo(-10, 18);
-  context.lineTo(-18, 27);
-  context.lineTo(-7, 24);
+  context.lineTo(-18 - (player.moving ? walking * 3 : 0), 27);
+  context.lineTo(-7 - (attacking ? 4 : 0), 24);
   context.closePath();
   context.fill();
   context.stroke();
 
   context.beginPath();
   context.moveTo(9, 18);
-  context.lineTo(18, 27);
-  context.lineTo(7, 24);
+  context.lineTo(18 + (attacking ? 10 : player.moving ? walking * 3 : 0), 27);
+  context.lineTo(7 + (attacking ? 6 : 0), 24);
   context.closePath();
   context.fill();
   context.stroke();
