@@ -8,6 +8,7 @@ const levelElement = document.getElementById("level");
 const xpElement = document.getElementById("xp");
 const xpNeededElement = document.getElementById("xp-needed");
 const killsElement = document.getElementById("kills");
+const roundElement = document.getElementById("round");
 const messageElement = document.getElementById("message");
 
 const keys = new Set();
@@ -23,6 +24,8 @@ let evolutionRoute = null;
 let routeSelectionOpen = false;
 let skillSelectionOpen = false;
 let pendingEvolutionRoute = false;
+let roundNumber = 1;
+let roundTransition = false;
 
 function randomPosition(padding = 30) {
   return {
@@ -46,7 +49,6 @@ function createResources(count = 12) {
 }
 
 function createEnemies(count = 3) {
-  enemies.length = 0;
   for (let i = 0; i < count; i += 1) {
     const health = 40 + player.level * 15;
     enemies.push({
@@ -58,6 +60,23 @@ function createEnemies(count = 3) {
       monsterType: Math.random() < 0.5 ? "fang" : "slime",
     });
   }
+}
+
+function enemyCountForRound() {
+  return 2 + roundNumber;
+}
+
+function startNextRound() {
+  if (roundTransition) return;
+  roundTransition = true;
+  roundNumber += 1;
+  updateInterface();
+  setMessage(`第 ${roundNumber} 回合！怪物增加為 ${enemyCountForRound()} 隻！`);
+
+  window.setTimeout(() => {
+    createEnemies(enemyCountForRound());
+    roundTransition = false;
+  }, 800);
 }
 
 function resetGame() {
@@ -85,9 +104,12 @@ function resetGame() {
   routeSelectionOpen = false;
   skillSelectionOpen = false;
   pendingEvolutionRoute = false;
+  roundNumber = 1;
+  roundTransition = false;
   resources.length = 0;
+  enemies.length = 0;
   createResources();
-  createEnemies();
+  createEnemies(enemyCountForRound());
   setMessage("收集資源、進入敵人範圍即可自動攻擊；經驗可讓角色進化！");
   updateInterface();
 }
@@ -104,6 +126,7 @@ function updateInterface() {
   xpElement.textContent = player.xp;
   xpNeededElement.textContent = xpNeeded(player.level);
   killsElement.textContent = player.kills;
+  roundElement.textContent = roundNumber;
 }
 
 function gainXp(amount) {
@@ -126,7 +149,6 @@ function evolve() {
 
   const name = evolutionNames[player.level - 1] || `進化體 ${player.level}`;
   setMessage(`進化成功！你成為「${name}」，攻擊與生命上限提升！`);
-  createEnemies(Math.min(3 + player.level, 7));
 
   pendingEvolutionRoute = player.level === 10 && evolutionRoute === null;
   openSkillSelection();
@@ -269,6 +291,7 @@ function attack() {
       }
     }
   }
+  if (enemies.length === 0) startNextRound();
   if (hitCount === 0) attackReady = true;
   updateInterface();
 
@@ -305,7 +328,6 @@ function moveEnemies() {
 function respawnWorld(timestamp) {
   if (timestamp - lastResourceRespawn > 5000) {
     if (resources.length < 8) createResources(8);
-    if (enemies.length < 3) createEnemies(3);
     lastResourceRespawn = timestamp;
   }
 }
