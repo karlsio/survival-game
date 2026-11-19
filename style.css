@@ -1,0 +1,82 @@
+:root {
+  color-scheme: dark;
+  font-family: "Microsoft JhengHei", "Segoe UI", sans-serif;
+  background: #10151a;
+  color: #f3f7f4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at top, #263b31, #10151a 70%);
+}
+
+.game {
+  width: min(92vw, 840px);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+h1 {
+  margin: 12px 0;
+  font-size: 1.5rem;
+}
+
+.stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stats span {
+  padding: 7px 10px;
+  border: 1px solid #53665c;
+  border-radius: 999px;
+  background: #18221d;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 2px solid #6a806f;
+  border-radius: 10px;
+  background: #4d6d50;
+  image-rendering: pixelated;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 1px solid #718b78;
+  border-radius: 7px;
+  padding: 9px 12px;
+  background: #26372e;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #345141;
+}
+
+#message {
+  min-height: 24px;
+  color: #d7e4da;
+}

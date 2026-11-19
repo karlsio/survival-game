@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>荒野生存原型</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game">
+      <header>
+        <h1>荒野生存</h1>
+        <div class="stats">
+          <span>生命 <strong id="health">100</strong></span>
+          <span>木材 <strong id="wood">0</strong></span>
+          <span>石頭 <strong id="stone">0</strong></span>
+        </div>
+      </header>
+
+      <canvas id="world" width="800" height="500" aria-label="遊戲地圖"></canvas>
+
+      <section class="actions" aria-label="製作與操作">
+        <button id="craft-axe">製作斧頭（木材 3／石頭 2）</button>
+        <button id="heal">使用木材治療（木材 2）</button>
+        <button id="restart">重新開始</button>
+      </section>
+
+      <p id="message" role="status">使用方向鍵或 WASD 移動，靠近資源自動收集。</p>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
