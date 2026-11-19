@@ -164,6 +164,25 @@ function gainXp(amount) {
   updateInterface();
 }
 
+function getEvolutionName() {
+  if (evolutionRoute === "flame") {
+    if (player.level >= 15) return "焚界火龍";
+    if (player.level >= 12) return "烈焰龍";
+    return "火焰龍";
+  }
+  if (evolutionRoute === "machine") {
+    if (player.level >= 15) return "鋼翼機龍";
+    if (player.level >= 12) return "機甲龍";
+    return "機械龍";
+  }
+  if (evolutionRoute === "light") {
+    if (player.level >= 15) return "天光聖龍";
+    if (player.level >= 12) return "聖光龍";
+    return "光明龍";
+  }
+  return evolutionNames[player.level - 1] || `進化體 ${player.level}`;
+}
+
 function evolve() {
   player.level += 1;
   player.damage += 12;
@@ -172,7 +191,7 @@ function evolve() {
   player.health = player.maxHealth;
   player.speed = Math.min(4.8, player.speed + 0.2);
 
-  const name = evolutionNames[player.level - 1] || `進化體 ${player.level}`;
+  const name = getEvolutionName();
   setMessage(`進化成功！你成為「${name}」，攻擊與生命上限提升！`);
 
   pendingEvolutionRoute = player.level === 10 && evolutionRoute === null;
@@ -485,6 +504,7 @@ function drawDigitalMonster() {
   const walking = player.moving ? Math.sin(now / 85) : 0;
   const attacking = now < player.attackingUntil;
   const damaged = now < player.damagedUntil;
+  const routeStage = player.level >= 15 ? 3 : player.level >= 12 ? 2 : 1;
   let bodyColor = "#f58235";
   let outlineColor = "#7c3421";
   let accentColor = "#f3b55a";
@@ -510,6 +530,61 @@ function drawDigitalMonster() {
 
   if (damaged) {
     context.globalAlpha = Math.floor(now / 60) % 2 === 0 ? 0.35 : 1;
+  }
+
+  if (evolutionRoute === "flame") {
+    context.fillStyle = routeStage >= 3 ? "#ff9f32" : "#ef7e24";
+    context.strokeStyle = "#a62d1f";
+    context.lineWidth = 2;
+    const wingSize = 12 + routeStage * 8;
+    context.beginPath();
+    context.moveTo(-12, -8);
+    context.lineTo(-18 - wingSize, -22 - routeStage * 4);
+    context.lineTo(-22 - wingSize, 5);
+    context.lineTo(-10, 12);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.beginPath();
+    context.moveTo(12, -8);
+    context.lineTo(18 + wingSize, -22 - routeStage * 4);
+    context.lineTo(22 + wingSize, 5);
+    context.lineTo(10, 12);
+    context.closePath();
+    context.fill();
+    context.stroke();
+  }
+
+  if (evolutionRoute === "machine") {
+    context.fillStyle = routeStage >= 3 ? "#d6e3e7" : "#aebbc2";
+    context.strokeStyle = "#495157";
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(-12, -12);
+    context.lineTo(-24 - routeStage * 3, -10);
+    context.lineTo(-20 - routeStage * 2, 3);
+    context.lineTo(-10, 7);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.beginPath();
+    context.moveTo(12, -12);
+    context.lineTo(24 + routeStage * 3, -10);
+    context.lineTo(20 + routeStage * 2, 3);
+    context.lineTo(10, 7);
+    context.closePath();
+    context.fill();
+    context.stroke();
+  }
+
+  if (evolutionRoute === "light") {
+    context.strokeStyle = "#fff3a6";
+    context.fillStyle = "rgba(255, 244, 166, 0.18)";
+    context.lineWidth = routeStage >= 3 ? 4 : 2;
+    context.beginPath();
+    context.arc(0, -24, 13 + routeStage * 4, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
   }
 
   context.fillStyle = bodyColor;
