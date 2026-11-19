@@ -98,6 +98,48 @@ button:hover {
   display: none;
 }
 
+.choice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  display: grid;
+  place-content: center;
+  gap: 20px;
+  padding: 24px;
+  background: rgba(9, 15, 12, 0.88);
+  backdrop-filter: blur(5px);
+  text-align: center;
+}
+
+.choice-overlay[hidden] {
+  display: none;
+}
+
+.choice-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 220px));
+  gap: 12px;
+}
+
+.choice-options button {
+  min-height: 110px;
+  border: 2px solid #718b78;
+  background: #26372e;
+  font-size: 1rem;
+}
+
+.choice-options button:hover {
+  border-color: #f0d58a;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+  .choice-options,
+  .route-options {
+    grid-template-columns: 1fr;
+  }
+}
+
 .route-options {
   display: grid;
   grid-template-columns: repeat(3, minmax(150px, 220px));

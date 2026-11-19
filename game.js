@@ -21,6 +21,8 @@ let attackReady = true;
 let lastResourceRespawn = 0;
 let evolutionRoute = null;
 let routeSelectionOpen = false;
+let skillSelectionOpen = false;
+let pendingEvolutionRoute = false;
 
 function randomPosition(padding = 30) {
   return {
@@ -74,11 +76,15 @@ function resetGame() {
     damage: 35,
     attackRange: 55,
     facing: 1,
+    attackCooldown: 280,
+    xpBonus: 1,
   };
   hasAxe = false;
   attackReady = true;
   evolutionRoute = null;
   routeSelectionOpen = false;
+  skillSelectionOpen = false;
+  pendingEvolutionRoute = false;
   resources.length = 0;
   createResources();
   createEnemies();
@@ -101,7 +107,7 @@ function updateInterface() {
 }
 
 function gainXp(amount) {
-  player.xp += amount;
+  player.xp += amount * player.xpBonus;
 
   while (player.xp >= xpNeeded(player.level)) {
     player.xp -= xpNeeded(player.level);
@@ -122,7 +128,88 @@ function evolve() {
   setMessage(`進化成功！你成為「${name}」，攻擊與生命上限提升！`);
   createEnemies(Math.min(3 + player.level, 7));
 
-  if (player.level === 10 && evolutionRoute === null) {
+  pendingEvolutionRoute = player.level === 10 && evolutionRoute === null;
+  openSkillSelection();
+}
+
+const skillCatalog = [
+  {
+    id: "damage",
+    name: "力量",
+    description: "攻擊力＋20",
+  },
+  {
+    id: "range",
+    name: "長距攻擊",
+    description: "攻擊範圍＋18",
+  },
+  {
+    id: "speed",
+    name: "迅捷",
+    description: "移動速度＋0.35",
+  },
+  {
+    id: "health",
+    name: "生命強化",
+    description: "生命上限＋40",
+  },
+  {
+    id: "attack-speed",
+    name: "連擊",
+    description: "攻擊冷卻－45 毫秒",
+  },
+  {
+    id: "xp",
+    name: "經驗專精",
+    description: "獲得經驗＋25%",
+  },
+];
+
+function getRandomSkills() {
+  const choices = [...skillCatalog];
+  const selected = [];
+  while (selected.length < 3) {
+    const index = Math.floor(Math.random() * choices.length);
+    selected.push(choices.splice(index, 1)[0]);
+  }
+  return selected;
+}
+
+function openSkillSelection() {
+  skillSelectionOpen = true;
+  const optionsElement = document.getElementById("skill-options");
+  optionsElement.replaceChildren();
+
+  getRandomSkills().forEach((skill) => {
+    const button = document.createElement("button");
+    button.dataset.skill = skill.id;
+    button.innerHTML = `${skill.name}<br><small>${skill.description}</small>`;
+    optionsElement.appendChild(button);
+  });
+
+  document.getElementById("skill-selection").hidden = false;
+}
+
+function applySkill(skillId) {
+  if (skillId === "damage") player.damage += 20;
+  if (skillId === "range") player.attackRange += 18;
+  if (skillId === "speed") player.speed = Math.min(6, player.speed + 0.35);
+  if (skillId === "health") {
+    player.maxHealth += 40;
+    player.health = player.maxHealth;
+  }
+  if (skillId === "attack-speed") {
+    player.attackCooldown = Math.max(100, player.attackCooldown - 45);
+  }
+  if (skillId === "xp") player.xpBonus += 0.25;
+
+  skillSelectionOpen = false;
+  document.getElementById("skill-selection").hidden = true;
+  setMessage("技能已選擇：繼續冒險！");
+  updateInterface();
+
+  if (pendingEvolutionRoute) {
+    pendingEvolutionRoute = false;
     routeSelectionOpen = true;
     document.getElementById("evolution-route").hidden = false;
   }
@@ -188,7 +275,7 @@ function attack() {
   if (hitCount > 0) {
     window.setTimeout(() => {
       attackReady = true;
-    }, 280);
+    }, player.attackCooldown);
   }
 }
 
@@ -453,7 +540,7 @@ function drawWorld() {
 }
 
 function update(timestamp) {
-  if (player.health > 0 && !routeSelectionOpen) {
+  if (player.health > 0 && !routeSelectionOpen && !skillSelectionOpen) {
     movePlayer();
     collectResources();
     moveEnemies();
@@ -493,6 +580,11 @@ document.getElementById("heal").addEventListener("click", () => {
 });
 
 document.getElementById("restart").addEventListener("click", resetGame);
+
+document.getElementById("skill-options").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-skill]");
+  if (button) applySkill(button.dataset.skill);
+});
 
 document.querySelectorAll("[data-route]").forEach((button) => {
   button.addEventListener("click", () => {
