@@ -19,6 +19,8 @@ let player;
 let hasAxe;
 let attackReady = true;
 let lastResourceRespawn = 0;
+let evolutionRoute = null;
+let routeSelectionOpen = false;
 
 function randomPosition(padding = 30) {
   return {
@@ -74,6 +76,8 @@ function resetGame() {
   };
   hasAxe = false;
   attackReady = true;
+  evolutionRoute = null;
+  routeSelectionOpen = false;
   resources.length = 0;
   createResources();
   createEnemies();
@@ -116,6 +120,11 @@ function evolve() {
   const name = evolutionNames[player.level - 1] || `進化體 ${player.level}`;
   setMessage(`進化成功！你成為「${name}」，攻擊與生命上限提升！`);
   createEnemies(Math.min(3 + player.level, 7));
+
+  if (player.level === 10 && evolutionRoute === null) {
+    routeSelectionOpen = true;
+    document.getElementById("evolution-route").hidden = false;
+  }
 }
 
 function movePlayer() {
@@ -228,12 +237,30 @@ function drawHealthBar(enemy) {
 
 function drawDigitalMonster() {
   const scale = 1 + Math.min(player.level - 1, 4) * 0.08;
+  let bodyColor = "#f58235";
+  let outlineColor = "#7c3421";
+  let accentColor = "#f3b55a";
+
+  if (evolutionRoute === "flame") {
+    bodyColor = "#ee4c32";
+    outlineColor = "#8c2018";
+    accentColor = "#ffc45b";
+  } else if (evolutionRoute === "machine") {
+    bodyColor = "#737d8a";
+    outlineColor = "#30353b";
+    accentColor = "#b7d3db";
+  } else if (evolutionRoute === "light") {
+    bodyColor = "#f4e6a4";
+    outlineColor = "#8f9bb5";
+    accentColor = "#ffffff";
+  }
+
   context.save();
   context.translate(player.x, player.y);
   context.scale(player.facing * scale, scale);
 
-  context.fillStyle = "#f58235";
-  context.strokeStyle = "#7c3421";
+  context.fillStyle = bodyColor;
+  context.strokeStyle = outlineColor;
   context.lineWidth = 2;
 
   context.beginPath();
@@ -257,12 +284,12 @@ function drawDigitalMonster() {
   context.fill();
   context.stroke();
 
-  context.fillStyle = "#f3b55a";
+  context.fillStyle = accentColor;
   context.beginPath();
   context.ellipse(1, 11, 10, 12, 0, 0, Math.PI * 2);
   context.fill();
 
-  context.fillStyle = "#f58235";
+  context.fillStyle = bodyColor;
   context.beginPath();
   context.moveTo(10, 13);
   context.quadraticCurveTo(30, 21, 20, 31);
@@ -288,7 +315,7 @@ function drawDigitalMonster() {
   context.closePath();
   context.fill();
 
-  context.fillStyle = "#f58235";
+  context.fillStyle = bodyColor;
   context.beginPath();
   context.moveTo(-10, 18);
   context.lineTo(-18, 27);
@@ -335,7 +362,7 @@ function drawWorld() {
 }
 
 function update(timestamp) {
-  if (player.health > 0) {
+  if (player.health > 0 && !routeSelectionOpen) {
     movePlayer();
     collectResources();
     moveEnemies();
@@ -375,6 +402,29 @@ document.getElementById("heal").addEventListener("click", () => {
 });
 
 document.getElementById("restart").addEventListener("click", resetGame);
+
+document.querySelectorAll("[data-route]").forEach((button) => {
+  button.addEventListener("click", () => {
+    evolutionRoute = button.dataset.route;
+    routeSelectionOpen = false;
+    document.getElementById("evolution-route").hidden = true;
+
+    if (evolutionRoute === "flame") {
+      player.damage += 35;
+      setMessage("進化為火焰龍！攻擊力大幅提升！");
+    } else if (evolutionRoute === "machine") {
+      player.attackRange += 30;
+      player.maxHealth += 50;
+      player.health = player.maxHealth;
+      setMessage("進化為機械龍！攻擊範圍與生命上限提升！");
+    } else {
+      player.speed = 5.5;
+      player.attackRange += 15;
+      setMessage("進化為光明龍！移動與攻擊範圍提升！");
+    }
+    updateInterface();
+  });
+});
 
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
