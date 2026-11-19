@@ -30,6 +30,7 @@ let roundTransition = false;
 let elapsedMilliseconds = 0;
 let lastTimerTimestamp = 0;
 let timerRunning = false;
+let manuallyPaused = false;
 
 function randomPosition(padding = 30) {
   return {
@@ -116,6 +117,9 @@ function resetGame() {
   elapsedMilliseconds = 0;
   lastTimerTimestamp = performance.now();
   timerRunning = true;
+  manuallyPaused = false;
+  document.getElementById("pause-screen").hidden = true;
+  document.getElementById("pause").textContent = "暫停";
   resources.length = 0;
   enemies.length = 0;
   createResources();
@@ -601,7 +605,7 @@ function drawWorld() {
 }
 
 function update(timestamp) {
-  if (timerRunning) {
+  if (timerRunning && !manuallyPaused) {
     if (player.health > 0 && !routeSelectionOpen && !skillSelectionOpen) {
       elapsedMilliseconds += timestamp - lastTimerTimestamp;
       movePlayer();
@@ -651,6 +655,30 @@ document.getElementById("heal").addEventListener("click", () => {
 });
 
 document.getElementById("restart").addEventListener("click", resetGame);
+document.getElementById("restart-paused").addEventListener("click", resetGame);
+
+function pauseGame() {
+  if (manuallyPaused || player.health <= 0) return;
+  manuallyPaused = true;
+  document.getElementById("pause-screen").hidden = false;
+  document.getElementById("pause").textContent = "繼續";
+  setMessage("遊戲已暫停。");
+  lastTimerTimestamp = performance.now();
+}
+
+function resumeGame() {
+  manuallyPaused = false;
+  document.getElementById("pause-screen").hidden = true;
+  document.getElementById("pause").textContent = "暫停";
+  lastTimerTimestamp = performance.now();
+  setMessage("遊戲繼續！");
+}
+
+document.getElementById("pause").addEventListener("click", () => {
+  if (manuallyPaused) resumeGame();
+  else pauseGame();
+});
+document.getElementById("resume").addEventListener("click", resumeGame);
 
 document.getElementById("skill-options").addEventListener("click", (event) => {
   const button = event.target.closest("[data-skill]");

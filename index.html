@@ -27,10 +27,19 @@
       <section class="actions" aria-label="製作與操作">
         <button id="craft-axe">製作斧頭（木材 3／石頭 2）</button>
         <button id="heal">使用木材治療（木材 2）</button>
+        <button id="pause">暫停</button>
         <button id="restart">重新開始</button>
       </section>
 
       <p id="message" role="status">使用方向鍵或 WASD 移動，靠近資源自動收集。</p>
+
+      <section id="pause-screen" class="choice-overlay" aria-label="遊戲暫停" hidden>
+        <h2>遊戲暫停</h2>
+        <div class="choice-options">
+          <button id="resume">繼續遊戲</button>
+          <button id="restart-paused">重新開始</button>
+        </div>
+      </section>
 
       <section id="skill-selection" class="choice-overlay" aria-label="升級技能選擇" hidden>
         <h2>升級！選擇一項技能</h2>
