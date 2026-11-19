@@ -53,6 +53,7 @@ function createEnemies(count = 3) {
       speed: 0.7 + Math.random() * 0.5 + player.level * 0.08,
       health,
       maxHealth: health,
+      monsterType: Math.random() < 0.5 ? "fang" : "slime",
     });
   }
 }
@@ -235,6 +236,99 @@ function drawHealthBar(enemy) {
   );
 }
 
+function drawFangMonster(enemy) {
+  context.save();
+  context.translate(enemy.x, enemy.y);
+
+  context.fillStyle = "#7a4a78";
+  context.strokeStyle = "#3d2740";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.ellipse(0, 2, enemy.size, enemy.size * 0.9, 0, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#d8b6d4";
+  context.beginPath();
+  context.moveTo(-9, -5);
+  context.lineTo(-5, -14);
+  context.lineTo(-2, -5);
+  context.closePath();
+  context.fill();
+  context.beginPath();
+  context.moveTo(9, -5);
+  context.lineTo(5, -14);
+  context.lineTo(2, -5);
+  context.closePath();
+  context.fill();
+
+  context.fillStyle = "#f0e9a8";
+  context.beginPath();
+  context.arc(-5, -1, 2.5, 0, Math.PI * 2);
+  context.arc(5, -1, 2.5, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#1f171f";
+  context.beginPath();
+  context.arc(-5, -1, 1.2, 0, Math.PI * 2);
+  context.arc(5, -1, 1.2, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#f2f0e6";
+  context.beginPath();
+  context.moveTo(-4, 5);
+  context.lineTo(-1, 11);
+  context.lineTo(1, 5);
+  context.closePath();
+  context.fill();
+  context.beginPath();
+  context.moveTo(4, 5);
+  context.lineTo(1, 11);
+  context.lineTo(-1, 5);
+  context.closePath();
+  context.fill();
+  context.restore();
+}
+
+function drawSlimeMonster(enemy) {
+  context.save();
+  context.translate(enemy.x, enemy.y);
+
+  context.fillStyle = "#55b9a7";
+  context.strokeStyle = "#28766b";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(-enemy.size, 10);
+  context.quadraticCurveTo(-enemy.size - 2, -9, -4, -enemy.size);
+  context.quadraticCurveTo(8, -15, enemy.size, 2);
+  context.quadraticCurveTo(enemy.size + 3, 12, -enemy.size, 10);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#d9fff4";
+  context.beginPath();
+  context.ellipse(-5, -5, 4, 5, 0, 0, Math.PI * 2);
+  context.ellipse(6, -4, 3.5, 4.5, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#173a35";
+  context.beginPath();
+  context.arc(-5, -4, 1.5, 0, Math.PI * 2);
+  context.arc(6, -3, 1.5, 0, Math.PI * 2);
+  context.fill();
+
+  context.restore();
+}
+
+function drawEnemy(enemy) {
+  if (enemy.monsterType === "slime") {
+    drawSlimeMonster(enemy);
+  } else {
+    drawFangMonster(enemy);
+  }
+}
+
 function drawDigitalMonster() {
   const scale = 1 + Math.min(player.level - 1, 4) * 0.08;
   let bodyColor = "#f58235";
@@ -351,10 +445,7 @@ function drawWorld() {
   }
 
   for (const enemy of enemies) {
-    context.fillStyle = "#b64040";
-    context.beginPath();
-    context.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
-    context.fill();
+    drawEnemy(enemy);
     drawHealthBar(enemy);
   }
 
