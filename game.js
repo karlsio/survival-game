@@ -10,6 +10,7 @@ const xpNeededElement = document.getElementById("xp-needed");
 const killsElement = document.getElementById("kills");
 const roundElement = document.getElementById("round");
 const timerElement = document.getElementById("timer");
+const enemyPowerElement = document.getElementById("enemy-power");
 const messageElement = document.getElementById("message");
 
 const keys = new Set();
@@ -34,6 +35,8 @@ let elapsedMilliseconds = 0;
 let lastTimerTimestamp = 0;
 let timerRunning = false;
 let manuallyPaused = false;
+let enemyPowerMultiplier = 1;
+let lastEnemyPowerMinute = 0;
 
 function randomPosition(padding = 30) {
   return {
@@ -58,13 +61,19 @@ function createResources(count = 12) {
 
 function createEnemies(count = 3) {
   for (let i = 0; i < count; i += 1) {
-    const health = 40 + player.level * 15;
+    const baseHealth = 40 + player.level * 15;
+    const baseSpeed = 0.7 + Math.random() * 0.5 + player.level * 0.08;
+    const baseDamage = 0.25;
     enemies.push({
       ...randomPosition(),
       size: 14,
-      speed: 0.7 + Math.random() * 0.5 + player.level * 0.08,
-      health,
-      maxHealth: health,
+      baseHealth,
+      baseSpeed,
+      baseDamage,
+      speed: baseSpeed * enemyPowerMultiplier,
+      health: baseHealth * enemyPowerMultiplier,
+      maxHealth: baseHealth * enemyPowerMultiplier,
+      damage: baseDamage * enemyPowerMultiplier,
       monsterType: Math.random() < 0.5 ? "fang" : "slime",
     });
   }
@@ -120,6 +129,8 @@ function resetGame() {
   lastTimerTimestamp = performance.now();
   timerRunning = true;
   manuallyPaused = false;
+  enemyPowerMultiplier = 1;
+  lastEnemyPowerMinute = 0;
   document.getElementById("pause-screen").hidden = true;
   document.getElementById("pause").textContent = "暫停";
   resources.length = 0;
@@ -145,6 +156,7 @@ function updateInterface() {
   killsElement.textContent = player.kills;
   roundElement.textContent = roundNumber;
   timerElement.textContent = formatTime(elapsedMilliseconds);
+  enemyPowerElement.textContent = `×${enemyPowerMultiplier.toFixed(2)}`;
 }
 
 function formatTime(milliseconds) {
@@ -153,6 +165,26 @@ function formatTime(milliseconds) {
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
+
+function strengthenEnemies() {
+  const elapsedMinutes = Math.floor(elapsedMilliseconds / 60000);
+  if (elapsedMinutes <= lastEnemyPowerMinute) return;
+
+  lastEnemyPowerMinute = elapsedMinutes;
+  enemyPowerMultiplier = 1 + elapsedMinutes * 0.1;
+
+  for (const enemy of enemies) {
+    const healthRatio = enemy.health / enemy.maxHealth;
+    enemy.speed = enemy.baseSpeed * enemyPowerMultiplier;
+    enemy.maxHealth = enemy.baseHealth * enemyPowerMultiplier;
+    enemy.health = enemy.maxHealth * healthRatio;
+    enemy.damage = enemy.baseDamage * enemyPowerMultiplier;
+  }
+
+  setMessage(`怪物在第 ${elapsedMinutes} 分鐘增強！基礎數值提升至 ${enemyPowerMultiplier.toFixed(2)} 倍。`);
+  updateInterface();
+}
+
 
 function gainXp(amount) {
   player.xp += amount * player.xpBonus;
@@ -372,7 +404,7 @@ function moveEnemies() {
     }
 
     if (distance < player.size + enemy.size) {
-      player.health -= 0.25;
+      player.health -= enemy.damage;
       player.damagedUntil = performance.now() + 120;
       updateInterface();
 
@@ -694,6 +726,7 @@ function update(timestamp) {
   if (timerRunning && !manuallyPaused) {
     if (player.health > 0 && !routeSelectionOpen && !skillSelectionOpen) {
       elapsedMilliseconds += timestamp - lastTimerTimestamp;
+      strengthenEnemies();
       movePlayer();
       updateCamera();
       collectResources();
