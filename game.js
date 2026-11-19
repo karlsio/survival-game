@@ -18,7 +18,6 @@ const enemies = [];
 const evolutionNames = ["新生者", "探險者", "荒野獵人", "守護者"];
 
 let player;
-let hasAxe;
 let attackReady = true;
 let lastResourceRespawn = 0;
 let evolutionRoute = null;
@@ -106,7 +105,6 @@ function resetGame() {
     attackingUntil: 0,
     damagedUntil: 0,
   };
-  hasAxe = false;
   attackReady = true;
   evolutionRoute = null;
   routeSelectionOpen = false;
@@ -291,8 +289,7 @@ function collectResources() {
     const dy = player.y - resource.y;
 
     if (Math.hypot(dx, dy) < player.size + resource.size) {
-      const amount = hasAxe ? 2 : 1;
-      player[resource.type] += amount;
+      player[resource.type] += 1;
       resources.splice(i, 1);
       gainXp(resource.type === "wood" ? 12 : 15);
       setMessage(`收集到${resource.type === "wood" ? "木材" : "石頭"}！獲得經驗。`);
@@ -625,21 +622,6 @@ function update(timestamp) {
   }
   requestAnimationFrame(update);
 }
-
-document.getElementById("craft-axe").addEventListener("click", () => {
-  if (hasAxe) {
-    setMessage("斧頭已經製作完成。");
-  } else if (player.wood >= 3 && player.stone >= 2) {
-    player.wood -= 3;
-    player.stone -= 2;
-    hasAxe = true;
-    player.damage += 8;
-    setMessage("製作成功！收集雙倍資源，且斧頭增加攻擊力。");
-    updateInterface();
-  } else {
-    setMessage("資源不足：需要木材 3 和石頭 2。");
-  }
-});
 
 document.getElementById("heal").addEventListener("click", () => {
   if (player.wood >= 2 && player.health < player.maxHealth) {
