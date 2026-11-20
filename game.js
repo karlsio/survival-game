@@ -1136,6 +1136,36 @@ function drawDigitalMonster() {
   context.stroke();
   context.shadowBlur = 0;
 
+  context.fillStyle = "rgba(255, 255, 255, 0.22)";
+  context.beginPath();
+  context.ellipse(-7, -7, 7, 11, -0.35, 0, Math.PI * 2);
+  context.fill();
+
+  context.strokeStyle = evolutionRoute === "flame" ? "#ffb46a" : evolutionRoute === "machine" ? "#b7d0d9" : evolutionRoute === "light" ? "#fff7c2" : "#dca56d";
+  context.lineWidth = 1;
+  for (let row = -6; row <= 12; row += 6) {
+    context.beginPath();
+    context.moveTo(-12, row);
+    context.quadraticCurveTo(0, row + 4, 12, row);
+    context.stroke();
+  }
+
+  context.fillStyle = accentColor;
+  context.beginPath();
+  context.moveTo(-12, -14);
+  context.lineTo(-19, -20);
+  context.lineTo(-15, -8);
+  context.lineTo(-10, -5);
+  context.closePath();
+  context.fill();
+  context.beginPath();
+  context.moveTo(12, -14);
+  context.lineTo(19, -20);
+  context.lineTo(15, -8);
+  context.lineTo(10, -5);
+  context.closePath();
+  context.fill();
+
   context.strokeStyle = accentColor;
   context.lineWidth = 1.5;
   context.beginPath();
