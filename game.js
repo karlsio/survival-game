@@ -58,6 +58,7 @@ function createResources(count = 12) {
       ...randomPosition(),
       type: i % 2 === 0 ? "wood" : "stone",
       size: 12,
+      phase: Math.random() * Math.PI * 2,
     });
   }
 }
@@ -459,6 +460,113 @@ function respawnWorld(timestamp) {
     if (resources.length < 8) createResources(8);
     lastResourceRespawn = timestamp;
   }
+}
+
+function drawWoodResource(resource, now) {
+  const float = Math.sin(now / 500 + resource.phase) * 2;
+  context.save();
+  context.translate(resource.x, resource.y + float);
+
+  context.shadowBlur = 8;
+  context.shadowColor = "rgba(230, 164, 92, 0.35)";
+  context.fillStyle = "#70411f";
+  context.strokeStyle = "#3d2415";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.ellipse(-4, 2, 11, 5, -0.25, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#a66a32";
+  context.beginPath();
+  context.moveTo(-12, -3);
+  context.quadraticCurveTo(-9, -12, 2, -9);
+  context.quadraticCurveTo(11, -8, 13, 1);
+  context.quadraticCurveTo(10, 8, -2, 8);
+  context.quadraticCurveTo(-13, 8, -12, -3);
+  context.fill();
+  context.stroke();
+
+  context.strokeStyle = "#cf9660";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.moveTo(-8, -5);
+  context.quadraticCurveTo(-2, 0, -7, 5);
+  context.moveTo(2, -8);
+  context.quadraticCurveTo(5, -1, 1, 6);
+  context.moveTo(-11, 1);
+  context.quadraticCurveTo(-5, 3, 0, 1);
+  context.stroke();
+
+  context.fillStyle = "#d1a36d";
+  context.beginPath();
+  context.ellipse(8, -4, 4, 5, 0.4, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  context.strokeStyle = "#7a4a25";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.arc(8, -4, 2.2, 0, Math.PI * 2);
+  context.stroke();
+
+  context.restore();
+}
+
+function drawStoneResource(resource, now) {
+  const pulse = 1 + Math.sin(now / 420 + resource.phase) * 0.04;
+  context.save();
+  context.translate(resource.x, resource.y);
+  context.scale(pulse, pulse);
+
+  context.shadowBlur = 10;
+  context.shadowColor = "rgba(183, 205, 210, 0.4)";
+  context.fillStyle = "#9daeb1";
+  context.strokeStyle = "#5f7073";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(-11, -7);
+  context.lineTo(-5, -13);
+  context.lineTo(6, -12);
+  context.lineTo(13, -3);
+  context.lineTo(9, 8);
+  context.lineTo(-3, 12);
+  context.lineTo(-12, 5);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#cad5d6";
+  context.beginPath();
+  context.moveTo(-5, -12);
+  context.lineTo(6, -12);
+  context.lineTo(1, -3);
+  context.lineTo(-9, -4);
+  context.closePath();
+  context.fill();
+
+  context.strokeStyle = "#6f7e80";
+  context.lineWidth = 1.4;
+  context.beginPath();
+  context.moveTo(1, -3);
+  context.lineTo(5, 4);
+  context.lineTo(1, 10);
+  context.moveTo(-9, -4);
+  context.lineTo(-2, 1);
+  context.lineTo(-5, 8);
+  context.moveTo(6, -11);
+  context.lineTo(9, -3);
+  context.stroke();
+
+  context.fillStyle = "rgba(233, 245, 245, 0.7)";
+  context.beginPath();
+  context.moveTo(-3, -10);
+  context.lineTo(3, -11);
+  context.lineTo(0, -6);
+  context.closePath();
+  context.fill();
+
+  context.restore();
 }
 
 function drawHealthBar(enemy) {
@@ -1238,10 +1346,8 @@ function drawWorld() {
   context.stroke();
 
   for (const resource of resources) {
-    context.fillStyle = resource.type === "wood" ? "#8a5a35" : "#bcc3c2";
-    context.beginPath();
-    context.arc(resource.x, resource.y, resource.size, 0, Math.PI * 2);
-    context.fill();
+    if (resource.type === "wood") drawWoodResource(resource, performance.now());
+    else drawStoneResource(resource, performance.now());
   }
 
   for (const enemy of enemies) {
