@@ -642,12 +642,60 @@ function drawDigitalMonster() {
     context.stroke();
   }
 
-  context.fillStyle = bodyColor;
+  context.shadowBlur = evolutionRoute ? 10 + routeStage * 2 : 4;
+  context.shadowColor = evolutionRoute === "flame"
+    ? "#ff8a38"
+    : evolutionRoute === "machine"
+      ? "#8bb4c8"
+      : evolutionRoute === "light"
+        ? "#fff5a8"
+        : "rgba(0, 0, 0, 0.35)";
+
+  const bodyGradient = context.createRadialGradient(-6, -12, 3, 0, 4, 24);
+  bodyGradient.addColorStop(0, evolutionRoute === "machine" ? "#d5dde0" : "#ffd07a");
+  bodyGradient.addColorStop(0.38, bodyColor);
+  bodyGradient.addColorStop(1, outlineColor);
+  context.fillStyle = bodyGradient;
   context.strokeStyle = outlineColor;
   context.lineWidth = 2;
 
   context.beginPath();
   context.ellipse(0, 3, 17, 21, 0, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+  context.shadowBlur = 0;
+
+  context.strokeStyle = accentColor;
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.moveTo(-11, -3);
+  context.quadraticCurveTo(-5, 5, -10, 14);
+  context.moveTo(11, -3);
+  context.quadraticCurveTo(5, 5, 10, 14);
+  context.moveTo(-8, 2);
+  context.quadraticCurveTo(0, 8, 8, 2);
+  context.stroke();
+
+  context.fillStyle = accentColor;
+  context.globalAlpha *= 0.78;
+  context.beginPath();
+  context.ellipse(-4, -10, 4, 7, -0.25, 0, Math.PI * 2);
+  context.fill();
+  context.globalAlpha = damaged ? (Math.floor(now / 60) % 2 === 0 ? 0.35 : 1) : 1;
+
+  context.fillStyle = outlineColor;
+  context.beginPath();
+  context.moveTo(-11, -17);
+  context.lineTo(-17, -31);
+  context.lineTo(-6, -21);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.moveTo(11, -18);
+  context.lineTo(17, -32);
+  context.lineTo(7, -21);
+  context.closePath();
   context.fill();
   context.stroke();
 
@@ -697,6 +745,40 @@ function drawDigitalMonster() {
   context.lineTo(8, 2);
   context.closePath();
   context.fill();
+
+  if (evolutionRoute === "flame") {
+    context.fillStyle = "#fff0a1";
+    context.beginPath();
+    context.moveTo(0, -1);
+    context.quadraticCurveTo(8, 4, 0, 10);
+    context.quadraticCurveTo(-8, 4, 0, -1);
+    context.fill();
+  } else if (evolutionRoute === "machine") {
+    context.fillStyle = "#e8f2f4";
+    context.strokeStyle = "#52616a";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(0, -2);
+    context.lineTo(5, 3);
+    context.lineTo(0, 9);
+    context.lineTo(-5, 3);
+    context.closePath();
+    context.fill();
+    context.stroke();
+  } else if (evolutionRoute === "light") {
+    context.fillStyle = "#fffbd1";
+    context.beginPath();
+    for (let point = 0; point < 8; point += 1) {
+      const angle = (Math.PI * 2 * point) / 8 - Math.PI / 2;
+      const radius = point % 2 === 0 ? 7 : 3;
+      const x = Math.cos(angle) * radius;
+      const y = 4 + Math.sin(angle) * radius;
+      if (point === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    }
+    context.closePath();
+    context.fill();
+  }
 
   context.fillStyle = bodyColor;
   context.beginPath();
