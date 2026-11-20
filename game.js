@@ -1083,6 +1083,51 @@ function drawDigitalMonster() {
   context.ellipse(1, 11, 10, 12, 0, 0, Math.PI * 2);
   context.fill();
 
+  context.strokeStyle = outlineColor;
+  context.lineWidth = 1.2;
+  context.beginPath();
+  context.moveTo(-7, 8);
+  context.quadraticCurveTo(0, 13, 7, 8);
+  context.moveTo(-5, 14);
+  context.quadraticCurveTo(0, 18, 5, 14);
+  context.moveTo(-3, 20);
+  context.quadraticCurveTo(0, 23, 3, 20);
+  context.stroke();
+
+  context.fillStyle = accentColor;
+  context.strokeStyle = outlineColor;
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.moveTo(-18, -7);
+  context.lineTo(-26, -1);
+  context.lineTo(-19, 5);
+  context.lineTo(-12, 1);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.moveTo(18, -7);
+  context.lineTo(26, -1);
+  context.lineTo(19, 5);
+  context.lineTo(12, 1);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = evolutionRoute === "machine" ? "#d9e8ed" : accentColor;
+  context.beginPath();
+  context.moveTo(-13, 5);
+  context.lineTo(-19, 16);
+  context.lineTo(-10, 12);
+  context.closePath();
+  context.fill();
+  context.beginPath();
+  context.moveTo(13, 5);
+  context.lineTo(19, 16);
+  context.lineTo(10, 12);
+  context.closePath();
+  context.fill();
+
   context.fillStyle = bodyColor;
   context.beginPath();
   context.moveTo(10, 13);
@@ -1156,6 +1201,24 @@ function drawDigitalMonster() {
   context.moveTo(9, 18);
   context.lineTo(18 + (attacking ? 10 : player.moving ? walking * 3 : 0), 27);
   context.lineTo(7 + (attacking ? 6 : 0), 24);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#e8eef0";
+  context.strokeStyle = outlineColor;
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(-18 - (player.moving ? walking * 3 : 0), 27);
+  context.lineTo(-21 - (player.moving ? walking * 3 : 0), 32);
+  context.lineTo(-15 - (player.moving ? walking * 3 : 0), 31);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.moveTo(18 + (attacking ? 10 : player.moving ? walking * 3 : 0), 27);
+  context.lineTo(21 + (attacking ? 10 : player.moving ? walking * 3 : 0), 32);
+  context.lineTo(15 + (attacking ? 10 : player.moving ? walking * 3 : 0), 31);
   context.closePath();
   context.fill();
   context.stroke();
