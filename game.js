@@ -75,6 +75,10 @@ function createEnemies(count = 3) {
       maxHealth: baseHealth * enemyPowerMultiplier,
       damage: baseDamage * enemyPowerMultiplier,
       monsterType: Math.random() < 0.5 ? "fang" : "slime",
+      facing: Math.random() < 0.5 ? -1 : 1,
+      hitUntil: 0,
+      attackingUntil: 0,
+      phase: Math.random() * Math.PI * 2,
     });
   }
 }
@@ -378,6 +382,8 @@ function attack() {
         player.kills += 1;
         gainXp(25);
         setMessage("擊敗敵人！獲得 25 點經驗。");
+      } else {
+        enemy.hitUntil = performance.now() + 140;
       }
     }
   }
@@ -401,9 +407,11 @@ function moveEnemies() {
     if (distance > 0) {
       enemy.x += (dx / distance) * enemy.speed;
       enemy.y += (dy / distance) * enemy.speed;
+      enemy.facing = dx >= 0 ? 1 : -1;
     }
 
     if (distance < player.size + enemy.size) {
+      enemy.attackingUntil = performance.now() + 180;
       player.health -= enemy.damage;
       player.damagedUntil = performance.now() + 120;
       updateInterface();
@@ -438,8 +446,16 @@ function drawHealthBar(enemy) {
 }
 
 function drawFangMonster(enemy) {
+  const now = performance.now();
+  const hit = now < enemy.hitUntil;
+  const attacking = now < enemy.attackingUntil;
+  const bob = Math.sin(now / 140 + enemy.phase) * 2;
   context.save();
   context.translate(enemy.x, enemy.y);
+  context.scale(enemy.facing, 1);
+  context.translate(0, bob);
+  if (hit) context.globalAlpha = 0.45;
+  if (attacking) context.scale(1.12, 0.92);
 
   context.fillStyle = "#7a4a78";
   context.strokeStyle = "#3d2740";
@@ -492,8 +508,15 @@ function drawFangMonster(enemy) {
 }
 
 function drawSlimeMonster(enemy) {
+  const now = performance.now();
+  const hit = now < enemy.hitUntil;
+  const attacking = now < enemy.attackingUntil;
+  const pulse = 1 + Math.sin(now / 110 + enemy.phase) * 0.08;
   context.save();
   context.translate(enemy.x, enemy.y);
+  context.scale(enemy.facing * (attacking ? 1.12 : pulse), attacking ? 0.88 : 1 / pulse);
+  context.translate(0, -Math.abs(Math.sin(now / 110 + enemy.phase)) * 3);
+  if (hit) context.globalAlpha = 0.45;
 
   context.fillStyle = "#55b9a7";
   context.strokeStyle = "#28766b";
