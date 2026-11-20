@@ -42,6 +42,10 @@ let lastEnemyPowerMinute = 0;
 let unlockedMonsterTypes = 2;
 let lastMonsterUnlockMinute = 0;
 let attackEffects = [];
+const attackComponentPool = new Map();
+const passiveComponentPool = new Map();
+let attackComponent = null;
+let passiveComponent = null;
 
 function randomPosition(padding = 30) {
   return {
@@ -170,12 +174,15 @@ function resetGame() {
   lastMonsterUnlockMinute = 0;
   lastEnemyPowerMinute = 0;
   attackEffects = [];
+  attackComponent = null;
+  passiveComponent = null;
   document.getElementById("pause-screen").hidden = true;
   document.getElementById("pause").textContent = "暫停";
   resources.length = 0;
   enemies.length = 0;
   createResources();
   createEnemies(enemyCountForRound());
+  syncEvolutionComponents();
   updateCamera();
   setMessage("收集資源、進入敵人範圍即可自動攻擊；經驗可讓角色進化！");
   updateInterface();
@@ -237,6 +244,92 @@ function gainXp(amount) {
   updateInterface();
 }
 
+function getOrCreateAttackComponent(attackType) {
+  if (!attackComponentPool.has(attackType)) {
+    attackComponentPool.set(attackType, {
+      type: attackType,
+      attribute: "vaccine",
+      active: false,
+      visible: false,
+      setActive(value) {
+        this.active = value;
+        return this;
+      },
+      setVisible(value) {
+        this.visible = value;
+        return this;
+      },
+      setAttribute(value) {
+        this.attribute = value;
+        return this;
+      },
+    });
+  }
+  return attackComponentPool.get(attackType);
+}
+
+function switchAttackComponent(attackType, attribute) {
+  if (attackComponent) {
+    attackComponent.setActive(false).setVisible(false);
+  }
+  attackComponent = getOrCreateAttackComponent(attackType);
+  attackComponent.setActive(true).setVisible(true).setAttribute(attribute);
+}
+
+function createPassive(passiveId) {
+  if (!passiveComponentPool.has(passiveId)) {
+    passiveComponentPool.set(passiveId, {
+      id: passiveId,
+      chargedKills: 0,
+      reset() {
+        this.chargedKills = 0;
+      },
+      onKill() {
+        if (this.id === "lifesteal_on_kill") {
+          player.health = Math.min(player.maxHealth, player.health + 8);
+        }
+        if (this.id === "bonus_vs_virus") {
+          this.chargedKills += 1;
+        }
+      },
+    });
+  }
+  const component = passiveComponentPool.get(passiveId);
+  component.reset();
+  return component;
+}
+
+function applyPassive(passiveId) {
+  if (passiveComponent) passiveComponent.reset();
+  passiveComponent = createPassive(passiveId);
+}
+
+function syncEvolutionComponents() {
+  if (evolutionRoute === "greymon") {
+    if (player.level >= 15 && player.bond >= 500) {
+      switchAttackComponent("fullscreen_tornado", "vaccine");
+      applyPassive("bonus_vs_virus");
+    } else {
+      switchAttackComponent("cone_projectile", "vaccine");
+      applyPassive("none");
+    }
+  } else if (evolutionRoute === "tyrannomon") {
+    switchAttackComponent("melee_cleave", "virus");
+    applyPassive("lifesteal_on_kill");
+  } else if (evolutionRoute === "metal") {
+    if (player.level >= 15 && player.bond >= 500) {
+      switchAttackComponent("fullscreen_tornado", "vaccine");
+      applyPassive("bonus_vs_virus");
+    } else {
+      switchAttackComponent("energy", "vaccine");
+      applyPassive("none");
+    }
+  } else {
+    switchAttackComponent("slash", player.attribute);
+    applyPassive("none");
+  }
+}
+
 function getEvolutionName() {
   if (evolutionRoute === "greymon") {
     if (player.level >= 15 && player.bond >= 500) return "戰鬥暴龍獸";
@@ -283,6 +376,7 @@ function evolve() {
   if (player.level === 15 && evolutionRoute === "greymon" && player.bond >= 500) {
     player.attribute = "vaccine";
   }
+  syncEvolutionComponents();
 
   const name = getEvolutionName();
   setMessage(`進化成功！你成為「${name}」，攻擊與生命上限提升！`);
@@ -438,11 +532,11 @@ function attack() {
 
     if (inAttackRange) {
       let damage = player.damage;
-      if (evolutionRoute === "tyrannomon") damage *= 1.35;
-      if (evolutionRoute === "metal" || evolutionRoute === "greymon") damage *= 1.15;
-      if (evolutionRoute === "metal" || evolutionRoute === "greymon") {
-        if (player.level >= 15 && player.bond >= 500 && enemy.attribute === "virus") damage *= 1.25;
-      }
+      if (attackComponent?.type === "melee_cleave") damage *= 1.35;
+      if (attackComponent?.type === "cone_projectile" || attackComponent?.type === "fullscreen_tornado") damage *= 1.15;
+      if (attackComponent?.type === "fullscreen_tornado"
+        && passiveComponent?.id === "bonus_vs_virus"
+        && enemy.attribute === "virus") damage *= 1.25;
       enemy.health -= damage;
       hitCount += 1;
 
@@ -450,9 +544,7 @@ function attack() {
         enemies.splice(i, 1);
         player.kills += 1;
         player.bond += 10;
-        if (evolutionRoute === "tyrannomon") {
-          player.health = Math.min(player.maxHealth, player.health + 8);
-        }
+        if (passiveComponent) passiveComponent.onKill();
         gainXp(25);
         setMessage("擊敗敵人！獲得 25 點經驗。");
       } else {
@@ -888,15 +980,13 @@ function drawBeetleMonster(enemy) {
 
 function addAttackEffect() {
   const now = performance.now();
-  const warGreymon = (evolutionRoute === "metal" || evolutionRoute === "greymon")
-    && player.level >= 15
-    && player.bond >= 500;
-
-  let type = "slash";
-  if (warGreymon) type = "tornado";
-  else if (evolutionRoute === "greymon") type = "projectile";
-  else if (evolutionRoute === "tyrannomon") type = "cleave";
-  else if (evolutionRoute === "metal") type = "energy";
+  const typeByAttack = {
+    cone_projectile: "projectile",
+    melee_cleave: "cleave",
+    energy: "energy",
+    fullscreen_tornado: "tornado",
+  };
+  const type = typeByAttack[attackComponent?.type] || "slash";
 
   attackEffects.push({
     type,
@@ -1682,6 +1772,7 @@ document.querySelectorAll("[data-route]").forEach((button) => {
       player.health = player.maxHealth;
       setMessage("進化為機械暴龍獸！羈絆達 500 可進化戰鬥暴龍獸！");
     }
+    syncEvolutionComponents();
     updateInterface();
   });
 });
