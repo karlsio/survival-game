@@ -553,6 +553,235 @@ function drawEnemy(enemy) {
   }
 }
 
+function drawWingEvolution(now, walking, attacking, hit) {
+  const wingBeat = Math.sin(now / 180) * 4;
+  const armor = [
+    "#dceeff",
+    "#73cdf6",
+    "#147cc2",
+    "#07528e",
+  ];
+
+  if (hit) context.globalAlpha = 0.45;
+
+  context.fillStyle = "#e7f5ff";
+  context.strokeStyle = "#123f70";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(-29, -12);
+  context.lineTo(-48, -35 - wingBeat);
+  context.lineTo(-52, -15);
+  context.lineTo(-38, 2);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.moveTo(29, -12);
+  context.lineTo(48, -35 - wingBeat);
+  context.lineTo(52, -15);
+  context.lineTo(38, 2);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = armor[1];
+  context.beginPath();
+  context.ellipse(0, 4, 23, 29, 0, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = armor[2];
+  context.beginPath();
+  context.moveTo(-16, -19);
+  context.lineTo(-8, -38);
+  context.lineTo(0, -22);
+  context.lineTo(9, -38);
+  context.lineTo(17, -18);
+  context.lineTo(11, 10);
+  context.lineTo(-11, 10);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#e9fbff";
+  context.beginPath();
+  context.moveTo(-8, -16);
+  context.lineTo(0, -27);
+  context.lineTo(9, -15);
+  context.lineTo(5, 8);
+  context.lineTo(-6, 8);
+  context.closePath();
+  context.fill();
+
+  context.fillStyle = "#ffffff";
+  context.beginPath();
+  context.moveTo(-17, -26);
+  context.lineTo(-30, -38);
+  context.lineTo(-18, -18);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.moveTo(17, -26);
+  context.lineTo(30, -38);
+  context.lineTo(18, -18);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#79e45c";
+  context.beginPath();
+  context.ellipse(-8, -20, 3, 4, 0, 0, Math.PI * 2);
+  context.ellipse(8, -20, 3, 4, 0, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = "#090d18";
+  context.beginPath();
+  context.arc(-8, -19, 1.5, 0, Math.PI * 2);
+  context.arc(8, -19, 1.5, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#edf3f5";
+  context.beginPath();
+  context.moveTo(-13, -11);
+  context.lineTo(-25, -4);
+  context.lineTo(-11, -3);
+  context.closePath();
+  context.fill();
+  context.beginPath();
+  context.moveTo(13, -11);
+  context.lineTo(25, -4);
+  context.lineTo(11, -3);
+  context.closePath();
+  context.fill();
+
+  context.fillStyle = armor[3];
+  context.fillRect(-17 - (walking * 2), 23, 10, 18);
+  context.fillRect(7 + (walking * 2), 23, 10, 18);
+  context.fillStyle = "#d8edf7";
+  context.fillRect(-19 - (walking * 2), 38, 14, 6);
+  context.fillRect(5 + (walking * 2), 38, 14, 6);
+
+  context.strokeStyle = "#a9d8ef";
+  context.lineWidth = 3;
+  context.beginPath();
+  context.moveTo(-12, -4);
+  context.quadraticCurveTo(-23, 5, -19 - (attacking ? 10 : 0), 18);
+  context.moveTo(12, -4);
+  context.quadraticCurveTo(23, 5, 19 + (attacking ? 10 : 0), 18);
+  context.stroke();
+}
+
+function drawMachineEvolution(now, walking, attacking, hit) {
+  if (hit) context.globalAlpha = 0.45;
+
+  context.fillStyle = "#9ab5c4";
+  context.strokeStyle = "#303a42";
+  context.lineWidth = 3;
+  context.beginPath();
+  context.moveTo(-28, -16);
+  context.lineTo(-58, -38);
+  context.lineTo(-48, -8);
+  context.lineTo(-27, 7);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.moveTo(28, -16);
+  context.lineTo(58, -38);
+  context.lineTo(48, -8);
+  context.lineTo(27, 7);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#3c6f96";
+  context.beginPath();
+  context.moveTo(-20, -24);
+  context.lineTo(-5, -45);
+  context.lineTo(8, -24);
+  context.lineTo(21, 8);
+  context.lineTo(14, 30);
+  context.lineTo(-16, 30);
+  context.lineTo(-22, 7);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#c92e2e";
+  context.beginPath();
+  context.moveTo(-13, -18);
+  context.lineTo(-31, -29);
+  context.lineTo(-22, -8);
+  context.lineTo(-12, 4);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.moveTo(13, -18);
+  context.lineTo(31, -29);
+  context.lineTo(22, -8);
+  context.lineTo(12, 4);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#eef7fa";
+  context.beginPath();
+  context.moveTo(-11, -27);
+  context.lineTo(0, -40);
+  context.lineTo(12, -26);
+  context.lineTo(7, -8);
+  context.lineTo(-7, -8);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#cbdbe2";
+  context.beginPath();
+  context.moveTo(-18, -8);
+  context.lineTo(-34, 4);
+  context.lineTo(-26, 25);
+  context.lineTo(-12, 17);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.moveTo(18, -8);
+  context.lineTo(34, 4);
+  context.lineTo(26, 25);
+  context.lineTo(12, 17);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#111924";
+  context.fillRect(-20 - (walking * 2), 26, 14, 22);
+  context.fillRect(6 + (walking * 2), 26, 14, 22);
+  context.fillStyle = "#7e98a6";
+  context.fillRect(-23 - (walking * 2), 44, 17, 7);
+  context.fillRect(6 + (walking * 2), 44, 17, 7);
+
+  context.fillStyle = "#ffca66";
+  context.beginPath();
+  context.arc(-8, -29, 3, 0, Math.PI * 2);
+  context.arc(8, -29, 3, 0, Math.PI * 2);
+  context.fill();
+  context.strokeStyle = "#7c1f22";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(-12, -18);
+  context.quadraticCurveTo(0, -10, 12, -18);
+  context.stroke();
+
+  if (attacking) {
+    context.strokeStyle = "#dff4ff";
+    context.lineWidth = 4;
+    context.beginPath();
+    context.arc(0, 4, 48, -1.2, 1.2);
+    context.stroke();
+  }
+}
+
 function drawDigitalMonster() {
   const scale = 1 + Math.min(player.level - 1, 4) * 0.08;
   const now = performance.now();
@@ -585,6 +814,13 @@ function drawDigitalMonster() {
 
   if (damaged) {
     context.globalAlpha = Math.floor(now / 60) % 2 === 0 ? 0.35 : 1;
+  }
+
+  if (routeStage >= 2) {
+    if (routeStage === 2) drawWingEvolution(now, walking, attacking, damaged);
+    else drawMachineEvolution(now, walking, attacking, damaged);
+    context.restore();
+    return;
   }
 
   if (evolutionRoute === "flame") {
