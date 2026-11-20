@@ -41,6 +41,7 @@ let enemyPowerMultiplier = 1;
 let lastEnemyPowerMinute = 0;
 let unlockedMonsterTypes = 2;
 let lastMonsterUnlockMinute = 0;
+let attackEffects = [];
 
 function randomPosition(padding = 30) {
   return {
@@ -168,6 +169,7 @@ function resetGame() {
   unlockedMonsterTypes = 2;
   lastMonsterUnlockMinute = 0;
   lastEnemyPowerMinute = 0;
+  attackEffects = [];
   document.getElementById("pause-screen").hidden = true;
   document.getElementById("pause").textContent = "暫停";
   resources.length = 0;
@@ -423,6 +425,7 @@ function attack() {
   if (!attackReady || player.health <= 0) return;
   attackReady = false;
   player.attackingUntil = performance.now() + 180;
+  addAttackEffect();
 
   let hitCount = 0;
   for (let i = enemies.length - 1; i >= 0; i -= 1) {
@@ -881,6 +884,99 @@ function drawBeetleMonster(enemy) {
   context.arc(5, -8, 2.5, 0, Math.PI * 2);
   context.fill();
   context.restore();
+}
+
+function addAttackEffect() {
+  const now = performance.now();
+  const warGreymon = (evolutionRoute === "metal" || evolutionRoute === "greymon")
+    && player.level >= 15
+    && player.bond >= 500;
+
+  let type = "slash";
+  if (warGreymon) type = "tornado";
+  else if (evolutionRoute === "greymon") type = "projectile";
+  else if (evolutionRoute === "tyrannomon") type = "cleave";
+  else if (evolutionRoute === "metal") type = "energy";
+
+  attackEffects.push({
+    type,
+    x: player.x,
+    y: player.y,
+    facing: player.facing,
+    until: now + (type === "tornado" ? 700 : 360),
+  });
+}
+
+function drawAttackEffects() {
+  const now = performance.now();
+  attackEffects = attackEffects.filter((effect) => now < effect.until);
+
+  for (const effect of attackEffects) {
+    const progress = 1 - (effect.until - now) / (effect.type === "tornado" ? 700 : 360);
+    context.save();
+    context.translate(effect.x, effect.y);
+    context.scale(effect.facing, 1);
+
+    if (effect.type === "projectile") {
+      context.strokeStyle = "#ffb14c";
+      context.fillStyle = "rgba(255, 92, 45, 0.7)";
+      context.lineWidth = 5 * (1 - progress * 0.35);
+      context.beginPath();
+      context.moveTo(12, 0);
+      context.quadraticCurveTo(38 + progress * 40, -22, 72 + progress * 45, 0);
+      context.quadraticCurveTo(38 + progress * 40, 22, 12, 0);
+      context.closePath();
+      context.fill();
+      context.stroke();
+      context.fillStyle = "#fff1a3";
+      context.beginPath();
+      context.arc(58 + progress * 35, 0, 7 * (1 - progress * 0.3), 0, Math.PI * 2);
+      context.fill();
+    } else if (effect.type === "cleave") {
+      context.strokeStyle = "#8a3ad1";
+      context.fillStyle = "rgba(143, 67, 211, 0.12)";
+      context.lineWidth = 7 * (1 - progress);
+      context.beginPath();
+      context.arc(10, 4, 42 * progress, -1.1, 0.8);
+      context.stroke();
+      context.beginPath();
+      context.moveTo(16, -30 * progress);
+      context.lineTo(52 * progress, 16);
+      context.lineTo(10, 32);
+      context.closePath();
+      context.fill();
+    } else if (effect.type === "energy") {
+      context.strokeStyle = "#8edfff";
+      context.lineWidth = 4;
+      context.beginPath();
+      context.arc(0, 0, 24 + progress * 38, 0, Math.PI * 2);
+      context.stroke();
+      for (let ring = 0; ring < 3; ring += 1) {
+        context.beginPath();
+        context.arc(18 + ring * 16, 0, 8 + progress * 15, 0, Math.PI * 2);
+        context.stroke();
+      }
+    } else if (effect.type === "tornado") {
+      context.strokeStyle = "#dff5ff";
+      context.fillStyle = "rgba(255, 222, 92, 0.12)";
+      context.lineWidth = 5;
+      for (let ring = 0; ring < 5; ring += 1) {
+        context.beginPath();
+        context.ellipse(0, 0, 30 + ring * 18 + progress * 20, 12 + ring * 5, progress * Math.PI * 2, 0, Math.PI * 2);
+        context.stroke();
+      }
+      context.beginPath();
+      context.arc(0, 0, 18 + progress * 80, 0, Math.PI * 2);
+      context.fill();
+    } else {
+      context.strokeStyle = "#e8eff4";
+      context.lineWidth = 4;
+      context.beginPath();
+      context.arc(4, 4, 35 * progress, -1.2, 1.0);
+      context.stroke();
+    }
+    context.restore();
+  }
 }
 
 function drawEnemy(enemy) {
@@ -1488,6 +1584,7 @@ function drawWorld() {
   }
 
   drawDigitalMonster();
+  drawAttackEffects();
   context.restore();
 }
 
