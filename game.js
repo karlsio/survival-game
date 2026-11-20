@@ -12,6 +12,7 @@ const roundElement = document.getElementById("round");
 const timerElement = document.getElementById("timer");
 const enemyPowerElement = document.getElementById("enemy-power");
 const monsterTypesElement = document.getElementById("monster-types");
+const bondElement = document.getElementById("bond");
 const messageElement = document.getElementById("message");
 
 const keys = new Set();
@@ -79,6 +80,7 @@ function createEnemies(count = 3) {
       maxHealth: baseHealth * enemyPowerMultiplier,
       damage: baseDamage * enemyPowerMultiplier,
       monsterType: randomUnlockedMonsterType(),
+      attribute: i % 2 === 0 ? "virus" : "vaccine",
       facing: Math.random() < 0.5 ? -1 : 1,
       hitUntil: 0,
       attackingUntil: 0,
@@ -148,6 +150,8 @@ function resetGame() {
     moving: false,
     attackingUntil: 0,
     damagedUntil: 0,
+    bond: 0,
+    attribute: "vaccine",
   };
   attackReady = true;
   evolutionRoute = null;
@@ -191,6 +195,7 @@ function updateInterface() {
   timerElement.textContent = formatTime(elapsedMilliseconds);
   enemyPowerElement.textContent = `×${enemyPowerMultiplier.toFixed(2)}`;
   monsterTypesElement.textContent = unlockedMonsterTypes;
+  bondElement.textContent = player.bond;
 }
 
 function formatTime(milliseconds) {
@@ -231,6 +236,19 @@ function gainXp(amount) {
 }
 
 function getEvolutionName() {
+  if (evolutionRoute === "greymon") {
+    if (player.level >= 15 && player.bond >= 500) return "戰鬥暴龍獸";
+    if (player.level >= 12) return "機械暴龍獸";
+    return "暴龍獸";
+  }
+  if (evolutionRoute === "tyrannomon") {
+    if (player.level >= 15) return "骷髏暴龍獸";
+    return "暴龍獸（病毒種）";
+  }
+  if (evolutionRoute === "metal") {
+    if (player.level >= 15 && player.bond >= 500) return "戰鬥暴龍獸";
+    return "機械暴龍獸";
+  }
   if (evolutionRoute === "flame") {
     if (player.level >= 15) return "焚界火龍";
     if (player.level >= 12) return "烈焰龍";
@@ -256,6 +274,13 @@ function evolve() {
   player.maxHealth += 20;
   player.health = player.maxHealth;
   player.speed = Math.min(4.8, player.speed + 0.2);
+
+  if (player.level === 12 && evolutionRoute === "greymon") {
+    player.attackRange += 20;
+  }
+  if (player.level === 15 && evolutionRoute === "greymon" && player.bond >= 500) {
+    player.attribute = "vaccine";
+  }
 
   const name = getEvolutionName();
   setMessage(`進化成功！你成為「${name}」，攻擊與生命上限提升！`);
@@ -387,6 +412,7 @@ function collectResources() {
       player[resource.type] += 1;
       resources.splice(i, 1);
       gainXp(resource.type === "wood" ? 12 : 15);
+      player.bond += 2;
       setMessage(`收集到${resource.type === "wood" ? "木材" : "石頭"}！獲得經驗。`);
     }
   }
@@ -402,14 +428,28 @@ function attack() {
   for (let i = enemies.length - 1; i >= 0; i -= 1) {
     const enemy = enemies[i];
     const distance = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+    const warGreymon = (evolutionRoute === "metal" || evolutionRoute === "greymon")
+      && player.level >= 15
+      && player.bond >= 500;
+    const inAttackRange = warGreymon || distance <= player.attackRange;
 
-    if (distance <= player.attackRange) {
-      enemy.health -= player.damage;
+    if (inAttackRange) {
+      let damage = player.damage;
+      if (evolutionRoute === "tyrannomon") damage *= 1.35;
+      if (evolutionRoute === "metal" || evolutionRoute === "greymon") damage *= 1.15;
+      if (evolutionRoute === "metal" || evolutionRoute === "greymon") {
+        if (player.level >= 15 && player.bond >= 500 && enemy.attribute === "virus") damage *= 1.25;
+      }
+      enemy.health -= damage;
       hitCount += 1;
 
       if (enemy.health <= 0) {
         enemies.splice(i, 1);
         player.kills += 1;
+        player.bond += 10;
+        if (evolutionRoute === "tyrannomon") {
+          player.health = Math.min(player.maxHealth, player.health + 8);
+        }
         gainXp(25);
         setMessage("擊敗敵人！獲得 25 點經驗。");
       } else {
@@ -1522,22 +1562,28 @@ document.getElementById("skill-options").addEventListener("click", (event) => {
 
 document.querySelectorAll("[data-route]").forEach((button) => {
   button.addEventListener("click", () => {
+    if (player.bond < 100) {
+      setMessage("羈絆不足：需要羈絆 100 才能進化！");
+      return;
+    }
     evolutionRoute = button.dataset.route;
     routeSelectionOpen = false;
     document.getElementById("evolution-route").hidden = true;
 
-    if (evolutionRoute === "flame") {
+    if (evolutionRoute === "greymon") {
+      player.attribute = "vaccine";
       player.damage += 35;
-      setMessage("進化為火焰龍！攻擊力大幅提升！");
-    } else if (evolutionRoute === "machine") {
+      setMessage("進化為暴龍獸！獲得錐形火球攻擊！");
+    } else if (evolutionRoute === "tyrannomon") {
+      player.attribute = "virus";
+      player.damage += 28;
+      setMessage("進化為暴龍獸（病毒種）！擊殺敵人可恢復生命！");
+    } else if (evolutionRoute === "metal") {
+      player.attribute = "vaccine";
       player.attackRange += 30;
       player.maxHealth += 50;
       player.health = player.maxHealth;
-      setMessage("進化為機械龍！攻擊範圍與生命上限提升！");
-    } else {
-      player.speed = 5.5;
-      player.attackRange += 15;
-      setMessage("進化為光明龍！移動與攻擊範圍提升！");
+      setMessage("進化為機械暴龍獸！羈絆達 500 可進化戰鬥暴龍獸！");
     }
     updateInterface();
   });
