@@ -11,6 +11,7 @@ const killsElement = document.getElementById("kills");
 const roundElement = document.getElementById("round");
 const timerElement = document.getElementById("timer");
 const enemyPowerElement = document.getElementById("enemy-power");
+const monsterTypesElement = document.getElementById("monster-types");
 const messageElement = document.getElementById("message");
 
 const keys = new Set();
@@ -37,6 +38,8 @@ let timerRunning = false;
 let manuallyPaused = false;
 let enemyPowerMultiplier = 1;
 let lastEnemyPowerMinute = 0;
+let unlockedMonsterTypes = 2;
+let lastMonsterUnlockMinute = 0;
 
 function randomPosition(padding = 30) {
   return {
@@ -74,7 +77,7 @@ function createEnemies(count = 3) {
       health: baseHealth * enemyPowerMultiplier,
       maxHealth: baseHealth * enemyPowerMultiplier,
       damage: baseDamage * enemyPowerMultiplier,
-      monsterType: Math.random() < 0.5 ? "fang" : "slime",
+      monsterType: randomUnlockedMonsterType(),
       facing: Math.random() < 0.5 ? -1 : 1,
       hitUntil: 0,
       attackingUntil: 0,
@@ -85,6 +88,29 @@ function createEnemies(count = 3) {
 
 function enemyCountForRound() {
   return 2 + roundNumber;
+}
+
+function randomUnlockedMonsterType() {
+  const types = ["fang", "slime"];
+  if (unlockedMonsterTypes >= 3) types.push("fire");
+  if (unlockedMonsterTypes >= 4) types.push("beetle");
+  return types[Math.floor(Math.random() * types.length)];
+}
+
+function unlockMonsterTypes() {
+  const elapsedMinutes = Math.floor(elapsedMilliseconds / 60000);
+  const unlockMinute = elapsedMinutes - (elapsedMinutes % 3);
+  const nextTypes = 2 + Math.floor(unlockMinute / 3);
+  const unlockedCount = Math.min(4, nextTypes);
+
+  if (unlockedCount > unlockedMonsterTypes) {
+    unlockedMonsterTypes = unlockedCount;
+    lastMonsterUnlockMinute = unlockMinute;
+    const names = ["牙怪", "史萊姆怪", "火焰蜥", "機甲甲蟲"];
+    setMessage(`怪物庫解鎖「${names[unlockedMonsterTypes - 1]}」！共可出現 ${unlockedMonsterTypes} 款怪物。`);
+  }
+
+  updateInterface();
 }
 
 function startNextRound() {
@@ -134,6 +160,8 @@ function resetGame() {
   timerRunning = true;
   manuallyPaused = false;
   enemyPowerMultiplier = 1;
+  unlockedMonsterTypes = 2;
+  lastMonsterUnlockMinute = 0;
   lastEnemyPowerMinute = 0;
   document.getElementById("pause-screen").hidden = true;
   document.getElementById("pause").textContent = "暫停";
@@ -161,6 +189,7 @@ function updateInterface() {
   roundElement.textContent = roundNumber;
   timerElement.textContent = formatTime(elapsedMilliseconds);
   enemyPowerElement.textContent = `×${enemyPowerMultiplier.toFixed(2)}`;
+  monsterTypesElement.textContent = unlockedMonsterTypes;
 }
 
 function formatTime(milliseconds) {
@@ -545,12 +574,110 @@ function drawSlimeMonster(enemy) {
   context.restore();
 }
 
-function drawEnemy(enemy) {
-  if (enemy.monsterType === "slime") {
-    drawSlimeMonster(enemy);
-  } else {
-    drawFangMonster(enemy);
+function drawFireMonster(enemy) {
+  const now = performance.now();
+  const hit = now < enemy.hitUntil;
+  const attacking = now < enemy.attackingUntil;
+  const wag = Math.sin(now / 100 + enemy.phase) * 3;
+
+  context.save();
+  context.translate(enemy.x, enemy.y);
+  context.scale(enemy.facing, 1);
+  if (hit) context.globalAlpha = 0.45;
+
+  context.fillStyle = "#df5a2b";
+  context.strokeStyle = "#792a20";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.ellipse(0, 4, enemy.size, enemy.size * 0.85, 0, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#ffb34b";
+  context.beginPath();
+  context.moveTo(-8, -7);
+  context.quadraticCurveTo(-18, -22 - wag, -4, -18);
+  context.quadraticCurveTo(6, -29 + wag, 9, -8);
+  context.closePath();
+  context.fill();
+
+  context.fillStyle = "#ffe478";
+  context.beginPath();
+  context.arc(-5, -3, 2.5, 0, Math.PI * 2);
+  context.arc(5, -3, 2.5, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#351811";
+  context.beginPath();
+  context.arc(-5, -3, 1.2, 0, Math.PI * 2);
+  context.arc(5, -3, 1.2, 0, Math.PI * 2);
+  context.fill();
+
+  context.strokeStyle = "#ffd66a";
+  context.lineWidth = attacking ? 5 : 2;
+  context.beginPath();
+  context.moveTo(10, 5);
+  context.quadraticCurveTo(25 + (attacking ? 10 : 0), 8 + wag, 19, -4);
+  context.stroke();
+  context.restore();
+}
+
+function drawBeetleMonster(enemy) {
+  const now = performance.now();
+  const hit = now < enemy.hitUntil;
+  const attacking = now < enemy.attackingUntil;
+  const stride = Math.sin(now / 120 + enemy.phase) * 3;
+
+  context.save();
+  context.translate(enemy.x, enemy.y);
+  context.scale(enemy.facing, 1);
+  if (hit) context.globalAlpha = 0.45;
+
+  context.fillStyle = "#26384e";
+  context.strokeStyle = "#111925";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.ellipse(0, 3, enemy.size + 4, enemy.size, 0, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  context.fillStyle = "#55a1ba";
+  context.beginPath();
+  context.moveTo(-12, -5);
+  context.lineTo(-4, -18);
+  context.lineTo(5, -16);
+  context.lineTo(12, -4);
+  context.lineTo(7, 8);
+  context.lineTo(-8, 8);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  context.strokeStyle = "#9ac8d7";
+  context.lineWidth = 3;
+  for (const side of [-1, 1]) {
+    context.beginPath();
+    context.moveTo(side * 8, 7);
+    context.lineTo(side * (16 + (attacking ? 5 : 0)), 17 + stride);
+    context.lineTo(side * 21, 24);
+    context.moveTo(side * 8, -2);
+    context.lineTo(side * 20, -11 - stride);
+    context.stroke();
   }
+
+  context.fillStyle = "#ffcf58";
+  context.beginPath();
+  context.arc(-5, -8, 2.5, 0, Math.PI * 2);
+  context.arc(5, -8, 2.5, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+}
+
+function drawEnemy(enemy) {
+  if (enemy.monsterType === "slime") drawSlimeMonster(enemy);
+  else if (enemy.monsterType === "fire") drawFireMonster(enemy);
+  else if (enemy.monsterType === "beetle") drawBeetleMonster(enemy);
+  else drawFangMonster(enemy);
 }
 
 function drawWingEvolution(now, walking, attacking, hit) {
@@ -1068,6 +1195,7 @@ function update(timestamp) {
     if (player.health > 0 && !routeSelectionOpen && !skillSelectionOpen) {
       elapsedMilliseconds += timestamp - lastTimerTimestamp;
       strengthenEnemies();
+      unlockMonsterTypes();
       movePlayer();
       updateCamera();
       collectResources();
