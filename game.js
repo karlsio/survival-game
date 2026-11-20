@@ -594,12 +594,28 @@ function drawFangMonster(enemy) {
   if (hit) context.globalAlpha = 0.45;
   if (attacking) context.scale(1.12, 0.92);
 
-  context.fillStyle = "#7a4a78";
+  const gradient = context.createRadialGradient(-5, -6, 2, 0, 2, 18);
+  gradient.addColorStop(0, "#bda1c1");
+  gradient.addColorStop(0.5, "#7a4a78");
+  gradient.addColorStop(1, "#41264a");
+  context.fillStyle = gradient;
   context.strokeStyle = "#3d2740";
-  context.lineWidth = 2;
+  context.lineWidth = 2.2;
+  context.shadowBlur = 5;
+  context.shadowColor = "rgba(78, 48, 85, 0.6)";
   context.beginPath();
   context.ellipse(0, 2, enemy.size, enemy.size * 0.9, 0, 0, Math.PI * 2);
   context.fill();
+  context.stroke();
+  context.shadowBlur = 0;
+
+  context.strokeStyle = "#d8b6d4";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(-10, 5);
+  context.quadraticCurveTo(-3, 11, 8, 5);
+  context.moveTo(-9, -7);
+  context.quadraticCurveTo(-2, -2, 9, -7);
   context.stroke();
 
   context.fillStyle = "#d8b6d4";
@@ -655,9 +671,15 @@ function drawSlimeMonster(enemy) {
   context.translate(0, -Math.abs(Math.sin(now / 110 + enemy.phase)) * 3);
   if (hit) context.globalAlpha = 0.45;
 
-  context.fillStyle = "#55b9a7";
+  const gradient = context.createRadialGradient(-5, -10, 2, 0, 0, enemy.size + 8);
+  gradient.addColorStop(0, "#bdf7df");
+  gradient.addColorStop(0.4, "#55b9a7");
+  gradient.addColorStop(1, "#28766b");
+  context.fillStyle = gradient;
   context.strokeStyle = "#28766b";
-  context.lineWidth = 2;
+  context.lineWidth = 2.2;
+  context.shadowBlur = 7;
+  context.shadowColor = "rgba(85, 185, 167, 0.6)";
   context.beginPath();
   context.moveTo(-enemy.size, 10);
   context.quadraticCurveTo(-enemy.size - 2, -9, -4, -enemy.size);
@@ -666,6 +688,13 @@ function drawSlimeMonster(enemy) {
   context.closePath();
   context.fill();
   context.stroke();
+  context.shadowBlur = 0;
+
+  context.fillStyle = "rgba(220, 255, 244, 0.55)";
+  context.beginPath();
+  context.ellipse(-8, -9, 3, 5, -0.4, 0, Math.PI * 2);
+  context.ellipse(8, 2, 2, 3, 0.2, 0, Math.PI * 2);
+  context.fill();
 
   context.fillStyle = "#d9fff4";
   context.beginPath();
@@ -693,12 +722,28 @@ function drawFireMonster(enemy) {
   context.scale(enemy.facing, 1);
   if (hit) context.globalAlpha = 0.45;
 
-  context.fillStyle = "#df5a2b";
+  const gradient = context.createLinearGradient(-14, -12, 14, 14);
+  gradient.addColorStop(0, "#ff8b43");
+  gradient.addColorStop(0.5, "#df5a2b");
+  gradient.addColorStop(1, "#792a20");
+  context.fillStyle = gradient;
   context.strokeStyle = "#792a20";
-  context.lineWidth = 2;
+  context.lineWidth = 2.2;
+  context.shadowBlur = 9;
+  context.shadowColor = "rgba(255, 120, 54, 0.7)";
   context.beginPath();
   context.ellipse(0, 4, enemy.size, enemy.size * 0.85, 0, 0, Math.PI * 2);
   context.fill();
+  context.stroke();
+  context.shadowBlur = 0;
+
+  context.strokeStyle = "#ffc56b";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(-10, 8);
+  context.quadraticCurveTo(-4, 12, 8, 7);
+  context.moveTo(-7, -6);
+  context.quadraticCurveTo(0, -1, 8, -6);
   context.stroke();
 
   context.fillStyle = "#ffb34b";
@@ -741,13 +786,30 @@ function drawBeetleMonster(enemy) {
   context.scale(enemy.facing, 1);
   if (hit) context.globalAlpha = 0.45;
 
-  context.fillStyle = "#26384e";
+  const gradient = context.createLinearGradient(-18, -15, 18, 15);
+  gradient.addColorStop(0, "#66879b");
+  gradient.addColorStop(0.45, "#26384e");
+  gradient.addColorStop(1, "#111925");
+  context.fillStyle = gradient;
   context.strokeStyle = "#111925";
-  context.lineWidth = 2;
+  context.lineWidth = 2.2;
+  context.shadowBlur = 6;
+  context.shadowColor = "rgba(92, 145, 170, 0.55)";
   context.beginPath();
   context.ellipse(0, 3, enemy.size + 4, enemy.size, 0, 0, Math.PI * 2);
   context.fill();
   context.stroke();
+  context.shadowBlur = 0;
+
+  context.fillStyle = "rgba(180, 218, 233, 0.38)";
+  context.beginPath();
+  context.moveTo(-9, -10);
+  context.lineTo(0, -16);
+  context.lineTo(9, -9);
+  context.lineTo(4, 4);
+  context.lineTo(-5, 4);
+  context.closePath();
+  context.fill();
 
   context.fillStyle = "#55a1ba";
   context.beginPath();
